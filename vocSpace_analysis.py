@@ -20,7 +20,7 @@ import matplotlib
 
 def multidim(classes, baby, age, args):
     # Define colormap
-    classes_colors = ['darkblue', 'red', 'gold', 'darkgreen']
+    classes_colors = ['darkgreen', 'darkblue', 'red', 'gold']
     classes_cmap = matplotlib.colors.LinearSegmentedColormap.from_list("manual", classes_colors)
     plt.register_cmap("manual", classes_cmap)
 
@@ -123,7 +123,7 @@ def multidim(classes, baby, age, args):
 
 def multidim_all(classes, babies, age, args):
     # Define colormap
-    classes_colors = ['darkblue', 'red', 'gold', 'darkgreen']
+    classes_colors = ['darkgreen', 'darkblue', 'red', 'gold']
     classes_cmap = matplotlib.colors.LinearSegmentedColormap.from_list("manual", classes_colors)
     plt.register_cmap("manual", classes_cmap)
 
@@ -332,8 +332,8 @@ def multidim_all(classes, babies, age, args):
 
 def my_plot(classes, args):
     # Define colormap
-    classes_colors = ['darkblue', 'green', 'red', 'gold']
-    #classes_colors = ['darkgreen', 'darkblue', 'red', 'gold']
+    #classes_colors = ['darkblue', 'red', 'gold']
+    classes_colors = ['darkgreen', 'darkblue', 'red', 'gold']
     classes_cmap = matplotlib.colors.LinearSegmentedColormap.from_list("manual", classes_colors)
     plt.register_cmap("manual", classes_cmap)
 
@@ -849,15 +849,15 @@ if __name__ == '__main__':
     if args.option == 'multidim_all':
         # Classes
         # classes = ['CHNNSP', 'CHNSP', 'FAF', 'FAN', 'MAN', 'TVF', 'TVN']
-        # classes = ['CHNNSP', 'CHNSP', 'FAN', 'MAN']
+        classes = ['CHNNSP', 'CHNSP', 'FAN', 'MAN']
         # classes = ['CHNSP', 'FAN', 'MAN']
-        classes = ['CHNSP', 'FAN']
+        #classes = ['CHNSP', 'FAN']
         # classes = ['CHNSP', 'CHNNSP']
         # classes = ['CHNSP', 'CHNNSP', 'FAN']
         # classes = ['CHNSP']
 
         # List of babies
-        summary = pd.read_csv(args.data_dir + '/' + 'new_baby_list.csv')
+        summary = pd.read_csv(args.data_dir + '/' + 'baby_list_basicONLYallAGES_18m.csv')
         summary = pd.DataFrame.to_numpy(summary)
         babies = summary[:, 0]
         age = summary[:, 1]
@@ -866,9 +866,10 @@ if __name__ == '__main__':
 
     if args.option == 'plot':
         #classes = ['CHNSP', 'FAN', 'MAN']
+        classes = ['CHNNSP', 'CHNSP', 'FAN', 'MAN']
         #classes = ['CHNSP', 'FAN']
         #classes = ['CHNNSP', 'CHNSP']
-        classes = ['CHNSP']
+        #classes = ['CHNSP']
         my_plot(classes, args)
 
     if args.option == 'stat':
