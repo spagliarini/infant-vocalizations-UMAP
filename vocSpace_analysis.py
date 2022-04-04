@@ -18,6 +18,18 @@ import pandas as pd
 import csv
 import matplotlib
 
+# entropy
+def entropy(hist):
+    from math import log
+    p = hist.flatten()
+    p = p/np.sum(p)
+    H = 0
+    for h in range(len(p)):
+        if p[h] != 0:
+            H = H + p[h] * log(p[h], 2)
+
+    return -H
+
 def multidim(classes, baby, age, args):
     # Define colormap
     classes_colors = ['darkgreen', 'darkblue', 'red', 'gold']
@@ -474,6 +486,9 @@ def stat(classes, baby_id, args):
         ratio.append(len(aux_X)/len(umapX))
         all_umapXY.append(all_XY_aux)
 
+        hist_aux, xedges, yedges = np.histogram2d(aux_X, aux_Y, bins=10)
+        hist2d_UMAP.append(hist_aux)
+
         # PCA
         aux_X = pcaX[np.where(labels==classes[i])[0]]
         aux_Y = pcaY[np.where(labels==classes[i])[0]]
@@ -496,6 +511,11 @@ def stat(classes, baby_id, args):
             all_XY_aux[j,1] = aux_Y[j]
         all_tsneXY.append(all_XY_aux)
 
+        hist_aux, xedges, yedges = np.histogram2d(aux_X, aux_Y, bins=10)
+        hist2d_tSNE.append(hist_aux)
+
+    hist2d_UMAP = np.asarray(hist2d_UMAP)
+    hist2d_tSNE = np.asarray(hist2d_tSNE)
     how_many = np.asarray(how_many)
 
     # centroids and entropy analysis
@@ -508,6 +528,8 @@ def stat(classes, baby_id, args):
     centroids_tSNE = []
     centroids_min_dist_tSNE = np.zeros((len(classes), len(classes)))
     centroids_mean_dist_tSNE = np.zeros((len(classes), len(classes)))
+    entropy_UMAP = []
+    entropy_tSNE = []
     for i in range(0, len(classes)):
         # centroid
         centroid_UMAP = (sum(all_umapX[i]) / len(all_umapX[i]), sum(all_umapY[i]) / len(all_umapY[i]))
@@ -547,6 +569,14 @@ def stat(classes, baby_id, args):
             centroids_min_dist_tSNE[i, k] = np.min(dist_tSNE)
             centroids_mean_dist_tSNE[i, k] = np.mean(dist_tSNE)
 
+        # entropy
+        # UMAP
+        H = entropy(hist2d_UMAP[i])
+        entropy_UMAP.append(H)
+        # tSNE
+        H = entropy(hist2d_tSNE[i])
+        entropy_tSNE.append(H)
+
     # Across classes centroids distance
     centroids = np.asarray(centroids)
     centroids_PCA = np.asarray(centroids_PCA)
@@ -567,7 +597,7 @@ def stat(classes, baby_id, args):
             dist_centroids_tSNE[i,j] = np.linalg.norm(centroids_tSNE[i]-centroids_tSNE[j])
 
     # Save a dictionary with the quantities
-    dataset_summary = {'how_many': how_many, 'entropy': entropy, 'cov_adultFANpre_babyCHNSP': cov_adultFANpre_babyCHNSP,
+    dataset_summary = {'how_many': how_many, 'entropy_UMAP': entropy_UMAP, 'entropy_tSNE': entropy_tSNE, 'cov_adultFANpre_babyCHNSP': cov_adultFANpre_babyCHNSP,
                        'cov_adultFANpost_babyCHNSP': cov_adultFANpost_babyCHNSP, 'cov_BBself': cov_babyCHNSP_self,
                        'cov_BBself_pre': cov_babyCHNSP_self_pre,
                        'corr_adultFANpre_babyCHNSP': corr_coeff_adultFANpre_babyCHNSP,
@@ -604,6 +634,8 @@ def plot_stat_complete(classes, args):
             pos_FAN = c
 
     # From stat summary
+    entropy_UMAP_CHNSP = np.zeros((len(babies),))
+    entropy_tSNE_CHNSP = np.zeros((len(babies),))
     ratio = []
     how_many_all = []
     how_many_classes = np.zeros((len(babies), len(classes)))
@@ -631,6 +663,8 @@ def plot_stat_complete(classes, args):
 
         dataset_summary = np.load(args.data_dir + '/' + babies[i] + '_stat_summary.npy', allow_pickle=True)
         dataset_summary = dataset_summary.item()
+        entropy_UMAP_CHNSP[i] = dataset_summary['entropy_UMAP'][0]
+        entropy_tSNE_CHNSP[i] = dataset_summary['entropy_tSNE'][0]
         ratio.append(dataset_summary['Ratio'])
         how_many_all.append(np.sum(dataset_summary['how_many']))
         how_many_classes[i,:] = dataset_summary['how_many']
@@ -646,6 +680,8 @@ def plot_stat_complete(classes, args):
 
     how_many_all = np.asarray(how_many_all)
     how_many_CHNSP = np.asarray(how_many_CHNSP)
+    entropy_UMAP_CHNSP = np.asarray(entropy_UMAP_CHNSP)
+    entropy_tSNE_CHNSP = np.asarray(entropy_tSNE_CHNSP)
     baby_ID = np.asarray(baby_ID)
     agegroup = np.asarray(agegroup)
     dist_CHNSP_FAN_UMAP = np.asarray(dist_CHNSP_FAN_UMAP)
@@ -668,6 +704,8 @@ def plot_stat_complete(classes, args):
 
     summary_table['NUMALLVOC'] = how_many_all
     summary_table['NUMCHNSPVOC'] = how_many_CHNSP
+    summary_table['CHNSPentropyUMAP'] = entropy_UMAP_CHNSP
+    summary_table['CHNSPentropytSNE'] = entropy_tSNE_CHNSP
     summary_table['CHILDID'] = baby_ID
     summary_table['AGEGROUP'] = agegroup
     summary_table['CENTROID_CHSNP_FAN_UMAP'] = dist_CHNSP_FAN_UMAP
@@ -715,6 +753,10 @@ def plot_stat_complete(classes, args):
     UMAP_CHNSPselfPREMeanCOVARIANCE = aux['pred']
     aux = readR.read_r(args.data_dir + '/' + 'UMAP_CHNSPselfMeanCOVARIANCE.Rdata')
     UMAP_CHNSPselfMeanCOVARIANCE = aux['pred']
+    aux = readR.read_r(args.data_dir + '/' + 'UMAP_CHNSPentropy.Rdata')
+    UMAP_CHNSPentropy = aux['pred']
+    aux = readR.read_r(args.data_dir + '/' + 'tSNE_CHNSPentropy.Rdata')
+    tSNE_CHNSPentropy = aux['pred']
 
     fig, ax = plt.subplots()
     for i in range(0, len(babies)):
@@ -782,7 +824,50 @@ def plot_stat_complete(classes, args):
     plt.plot(sorted(age), tSNE_fit_CHNSPselfCENTROID, 'k', lw=0.5)
     plt.savefig(args.data_dir + '/' + 'MEAN_points_dist_CHNSP_self_tSNE.pdf')
 
+    fig, ax = plt.subplots()
+    for i in range(0, len(babies)):
+        plt.plot(age[i], entropy_UMAP_CHNSP[i], color=colors[i], marker='*')
+    ax.set_xlabel('Age (in days)', **csfont, fontsize=18)
+    ax.set_ylabel('Entropy', **csfont, fontsize=18)
+    plt.plot(sorted(age), UMAP_CHNSPentropy, 'k', lw=0.5)
+    #plt.legend(handles=legend_elements, ncol=2)
+    plt.savefig(args.data_dir + '/' + 'entropy_UMAP.pdf')
+
+    fig, ax = plt.subplots()
+    for i in range(0, len(babies)):
+        plt.plot(age[i], entropy_tSNE_CHNSP[i], color=colors[i], marker='*')
+    ax.set_xlabel('Age (in days)', **csfont, fontsize=18)
+    ax.set_ylabel('Entropy', **csfont, fontsize=18)
+    plt.plot(sorted(age), tSNE_CHNSPentropy, 'k', lw=0.5)
+    #plt.legend(handles=legend_elements, ncol=2)
+    plt.savefig(args.data_dir + '/' + 'entropy_tSNE.pdf')
+
     plt.close('all')
+
+    print('Done')
+
+def comparison(args):
+    # Read data
+    dataset_summary_L = pd.read_csv(args.data_dir + '/lena/' + 'baby_list.csv')
+    dataset_summary_H = pd.read_csv(args.data_dir + '/human/' + 'baby_list.csv')
+
+    lena_dist_CHNSP_FAN_UMAP = dataset_summary_L['CENTROID_CHSNP_FAN_UMAP']
+    lena_centroid_CHNSP_self_UMAP = dataset_summary_L['CENTROIDdist_CHSNPself_UMAP']
+
+    human_dist_CHNSP_FAN_UMAP = dataset_summary_H['CENTROID_CHSNP_FAN_UMAP']
+    human_centroid_CHNSP_self_UMAP = dataset_summary_H['CENTROIDdist_CHSNPself_UMAP']
+
+    fig, ax = plt.subplots()
+    plt.scatter(human_dist_CHNSP_FAN_UMAP, lena_dist_CHNSP_FAN_UMAP, color='k', marker='*')
+    lims = [np.min([ax.get_xlim(), ax.get_ylim()]),  np.max([ax.get_xlim(), ax.get_ylim()])]  # min/max of both axes
+    ax.plot(lims, lims, 'k--', alpha=0.75, zorder=0)
+    ax.set_xlabel('Manual labels', **csfont, fontsize=18)
+    ax.set_ylabel('Lena labels', **csfont, fontsize=18)
+    plt.savefig(args.data_dir + '/' + 'comparison_distCHNSPself.pdf')
+
+    # Correlation
+    corr = np.corrcoef(lena_centroid_CHNSP_self_UMAP, human_centroid_CHNSP_self_UMAP)
+    print(corr)
 
     print('Done')
 
@@ -792,7 +877,7 @@ if __name__ == '__main__':
     import sys
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--option', type=str, choices=['multidim', 'multidim_all', 'plot', 'stat', 'plot_stat_complete'])
+    parser.add_argument('--option', type=str, choices=['multidim', 'multidim_all', 'plot', 'stat', 'plot_stat_complete', 'comparison'])
     parser.add_argument('--data_dir', type=str)
     parser.add_argument('--output_dir', type=str)
     parser.add_argument('--baby_id', type=str)
@@ -884,7 +969,7 @@ if __name__ == '__main__':
         classes = ['CHNSP', 'CHNNSP']
         for i in range(0,len(babies)):
             print(babies[i])
-            if babies[i] != '0932_000602a':   #ICIS without '0583_000605':
+            if babies[i] != '0932_000602a':
                 stat(classes, babies[i], args)
 
     if args.option == 'plot_stat_complete':
@@ -892,5 +977,8 @@ if __name__ == '__main__':
         #classes = ['CHNSP', 'FAN']
         classes = ['CHNSP', 'CHNNSP']
         plot_stat_complete(classes, args)
+
+    if args.option == 'comparison':
+        comparison(args)
 
     ### Example: python3 BabyExperience.py --data_dir /Users/silviapagliarini/Documents/opensmile/HumanData_analysis --option plot
