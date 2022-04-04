@@ -644,6 +644,8 @@ def plot_stat_complete(classes, args):
     # From stat summary
     entropy_UMAP_CHNSP = np.zeros((len(babies),))
     entropy_tSNE_CHNSP = np.zeros((len(babies),))
+    entropy_UMAP_CHNNSP = np.zeros((len(babies),))
+    entropy_tSNE_CHNNSP = np.zeros((len(babies),))
     ratio = []
     how_many_all = []
     how_many_classes = np.zeros((len(babies), len(classes)))
@@ -660,6 +662,7 @@ def plot_stat_complete(classes, args):
     dist_CHNNSP_MAN_UMAP = []
     dist_CHNNSP_MAN_PCA = []
     dist_CHNNSP_MAN_tSNE = []
+    dist_CHNNSP_CHNSP_UMAP = []
     baby_ID = []
     agegroup = []
     centroid_CHNSP_self_UMAP = []
@@ -719,15 +722,23 @@ def plot_stat_complete(classes, args):
             centroid_CHNNSP_self_UMAP.append(dataset_summary['centroid_mean_dis'][pos_CHNNSP, pos_CHNNSP])
             centroid_CHNNSP_self_PCA.append(dataset_summary['centroid_mean_dis_PCA'][pos_CHNNSP, pos_CHNNSP])
             centroid_CHNNSP_self_tSNE.append(dataset_summary['centroid_mean_dis_tSNE'][pos_CHNNSP, pos_CHNNSP])
+            entropy_UMAP_CHNNSP[i] = dataset_summary['entropy_UMAP'][pos_CHNNSP]
+            entropy_tSNE_CHNNSP[i] = dataset_summary['entropy_tSNE'][pos_CHNNSP]
+        # Centroids distance from CHNNSP and FAN
+        if pos_CHNSP != -1 and pos_CHNNSP != -1:
+            dist_CHNNSP_CHNSP_UMAP.append(dataset_summary['Dist_centr_UMAP'][pos_CHNNSP, pos_CHNSP])
 
     how_many_all = np.asarray(how_many_all)
     how_many_CHNSP = np.asarray(how_many_CHNSP)
     entropy_UMAP_CHNSP = np.asarray(entropy_UMAP_CHNSP)
     entropy_tSNE_CHNSP = np.asarray(entropy_tSNE_CHNSP)
+    entropy_UMAP_CHNNSP = np.asarray(entropy_UMAP_CHNNSP)
+    entropy_tSNE_CHNNSP = np.asarray(entropy_tSNE_CHNNSP)
     baby_ID = np.asarray(baby_ID)
     agegroup = np.asarray(agegroup)
     dist_CHNSP_FAN_UMAP = np.asarray(dist_CHNSP_FAN_UMAP)
     dist_CHNSP_MAN_UMAP = np.asarray(dist_CHNSP_MAN_UMAP)
+    dist_CHNNSP_CHNSP_UMAP = np.asarray(dist_CHNSP_MAN_UMAP)
     centroid_CHNSP_self_UMAP = np.asarray(centroid_CHNSP_self_UMAP)
     dist_CHNNSP_FAN_UMAP = np.asarray(dist_CHNNSP_FAN_UMAP)
     dist_CHNNSP_MAN_UMAP = np.asarray(dist_CHNSP_MAN_UMAP)
@@ -751,13 +762,16 @@ def plot_stat_complete(classes, args):
     summary_table['NUMALLVOC'] = how_many_all
     summary_table['NUMCHNSPVOC'] = how_many_CHNSP
     summary_table['CHNSPentropyUMAP'] = entropy_UMAP_CHNSP
+    summary_table['CHNNSPentropyUMAP'] = entropy_UMAP_CHNNSP
     summary_table['CHNSPentropytSNE'] = entropy_tSNE_CHNSP
+    summary_table['CHNNSPentropytSNE'] = entropy_tSNE_CHNNSP
     summary_table['CHILDID'] = baby_ID
     summary_table['AGEGROUP'] = agegroup
     summary_table['CENTROID_CHSNP_FAN_UMAP'] = dist_CHNSP_FAN_UMAP
     summary_table['CENTROID_CHSNP_MAN_UMAP'] = dist_CHNSP_MAN_UMAP
     summary_table['CENTROID_CHSNNP_FAN_UMAP'] = dist_CHNNSP_FAN_UMAP
     summary_table['CENTROID_CHSNNP_MAN_UMAP'] = dist_CHNNSP_MAN_UMAP
+    summary_table['CENTROID_CHSNNP_CHNSP_UMAP'] = dist_CHNNSP_CHNSP_UMAP
     summary_table['CENTROID_CHSNP_FAN_PCA'] = dist_CHNSP_FAN_PCA
     summary_table['CENTROID_CHSNP_FAN_tSNE'] = dist_CHNSP_FAN_tSNE
     summary_table['CENTROIDdist_CHSNPself_UMAP'] = centroid_CHNSP_self_UMAP
@@ -831,7 +845,7 @@ def plot_stat_complete(classes, args):
         ax.set_ylabel('Entropy', **csfont, fontsize=18)
         plt.plot(sorted(age), UMAP_CHNSPentropy, 'k', lw=0.5)
         # plt.legend(handles=legend_elements, ncol=2)
-        plt.savefig(args.data_dir + '/' + 'entropy_UMAP.pdf')
+        plt.savefig(args.data_dir + '/' + 'entropy_CHNSP_UMAP.pdf')
 
         fig, ax = plt.subplots()
         for i in range(0, len(babies)):
@@ -840,13 +854,17 @@ def plot_stat_complete(classes, args):
         ax.set_ylabel('Entropy', **csfont, fontsize=18)
         plt.plot(sorted(age), tSNE_CHNSPentropy, 'k', lw=0.5)
         # plt.legend(handles=legend_elements, ncol=2)
-        plt.savefig(args.data_dir + '/' + 'entropy_tSNE.pdf')
+        plt.savefig(args.data_dir + '/' + 'entropy_CHNSP_tSNE.pdf')
 
         plt.close('all')
 
     if pos_CHNNSP != -1:
         aux = readR.read_r(args.data_dir + '/' + 'UMAP_CHNNSPcentroidSELF.Rdata')
         UMAP_fit_CHNNSPselfCENTROID = aux['pred']
+        aux = readR.read_r(args.data_dir + '/' + 'UMAP_CHNNSPentropy.Rdata')
+        UMAP_CHNNSPentropy = aux['pred']
+        aux = readR.read_r(args.data_dir + '/' + 'tSNE_CHNNSPentropy.Rdata')
+        tSNE_CHNNSPentropy = aux['pred']
 
         fig, ax = plt.subplots()
         for i in range(0, len(babies)):
@@ -856,6 +874,24 @@ def plot_stat_complete(classes, args):
             # plt.legend(handles=legend_elements, ncol=2)
         plt.plot(sorted(age), UMAP_fit_CHNNSPselfCENTROID, 'k', lw=0.5)
         plt.savefig(args.data_dir + '/' + 'MEAN_points_dist_CHNNSP_self_UMAP.pdf')
+
+        fig, ax = plt.subplots()
+        for i in range(0, len(babies)):
+            plt.plot(age[i], entropy_UMAP_CHNNSP[i], color=colors[i], marker='*')
+        ax.set_xlabel('Age (in days)', **csfont, fontsize=18)
+        ax.set_ylabel('Entropy', **csfont, fontsize=18)
+        plt.plot(sorted(age), UMAP_CHNNSPentropy, 'k', lw=0.5)
+        # plt.legend(handles=legend_elements, ncol=2)
+        plt.savefig(args.data_dir + '/' + 'entropy_CHNNSP_UMAP.pdf')
+
+        fig, ax = plt.subplots()
+        for i in range(0, len(babies)):
+            plt.plot(age[i], entropy_tSNE_CHNNSP[i], color=colors[i], marker='*')
+        ax.set_xlabel('Age (in days)', **csfont, fontsize=18)
+        ax.set_ylabel('Entropy', **csfont, fontsize=18)
+        plt.plot(sorted(age), tSNE_CHNNSPentropy, 'k', lw=0.5)
+        # plt.legend(handles=legend_elements, ncol=2)
+        plt.savefig(args.data_dir + '/' + 'entropy_CHNNSP_tSNE.pdf')
 
     if pos_FAN != -1 and pos_CHNSP != -1:
         aux = readR.read_r(args.data_dir + '/' + 'UMAP_CHNSP_FAN_centroid.Rdata')
@@ -919,6 +955,19 @@ def plot_stat_complete(classes, args):
             # plt.legend(handles=legend_elements, ncol=2)
         plt.plot(sorted(age), UMAP_fit_CHNNSP_MAN_CENTROID, 'k', lw=0.5)
         plt.savefig(args.data_dir + '/' + 'dist_CHNNSP_MAN_UMAP.pdf')
+
+    if pos_CHNSP != -1 and pos_CHNNSP != -1:
+        aux = readR.read_r(args.data_dir + '/' + 'UMAP_CHNNSP_CHNSP_centroid.Rdata')
+        UMAP_fit_CHNNSP_CHNSP_CENTROID = aux['pred']
+
+        fig, ax = plt.subplots()
+        for i in range(0, len(babies)):
+            plt.plot(age[i], dist_CHNNSP_CHNSP_UMAP[i], color=colors[i], marker='*')
+            ax.set_xlabel('Age (in days)', fontsize=15)
+            ax.set_ylabel('Distance between centroids', fontsize=15)
+            # plt.legend(handles=legend_elements, ncol=2)
+        plt.plot(sorted(age), UMAP_fit_CHNNSP_CHNSP_CENTROID, 'k', lw=0.5)
+        plt.savefig(args.data_dir + '/' + 'dist_CHNNSP_CHNSP_UMAP.pdf')
 
     plt.close('all')
 
