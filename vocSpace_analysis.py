@@ -1046,6 +1046,9 @@ def single(classes, baby, args):
             mfcc_table = pd.read_csv(data[i], sep=';')
             mfcc_table = mfcc_table.to_numpy()
 
+            # plot spectrogram
+            # plot MFCC
+
             sum_mfcc = 0
             k = 0
             while k < np.shape(mfcc_table)[0]:
