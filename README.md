@@ -22,7 +22,7 @@ References:
 1. Compute the low-dimensional representation (UMPA, t-SNE, PCA). The python file vocSpace_analysis.py contains:
 * multidim_all: function to compute UMAP and tSNE space from the MFCC coefficients collection. It creates summary tables (general and baby-wise with the coordinates of UMAP/tSNE space)
 * my_plot: manual plot of UMAP space (Figure 1 in the paper)
-* single: allos to represent one single recording and highlight random or selected points in the space. 
+* single: allows to represent one single recording and highlight random or selected points in the space. 
 
 2. Compute statistical properties of the clusters across families and across time (age). The python file vocSpace_analysis.py contains:
 * stat: function to compute the statistical quantities (e.g.: centorids, distance between centroids). It creates a summary table containing the statistical properties.
