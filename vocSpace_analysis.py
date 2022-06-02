@@ -17,6 +17,7 @@ import umap.plot
 import pandas as pd
 import csv
 import matplotlib
+import librosa
 
 csfont = {'fontname':'Times New Roman'}
 
@@ -175,7 +176,7 @@ def multidim_all(classes, babies, age, args):
     babyname = []
     timename = []
     agegroup = []
-    for b in range(0, len(new_babies)):
+    for b in range(0, 2): #len(new_babies)):
         for c in range(0, len(classes)):
             data = glob2.glob(args.data_dir + '/' + new_babies[b] + '*/' + classes[c] + '/' + '*.mfcc.csv')
             data = np.asarray(data)
@@ -244,6 +245,19 @@ def multidim_all(classes, babies, age, args):
 
                 i = i + 1
 
+    element_mean = np.zeros((np.shape(sum_mfcc_list)[1],))
+    element_std = np.zeros((np.shape(sum_mfcc_list)[1],))
+    for j in range(0,np.shape(sum_mfcc_list)[1]):
+        element_mean[j] = np.mean(np.asarray(sum_mfcc_list)[:, j])
+        element_std[j] = np.std(np.asarray(sum_mfcc_list)[:, j])
+
+    new_sum_mfcc = []
+    for i in range(0, np.shape(sum_mfcc_list)[0]):
+        sum_mfcc_list_aux = np.zeros((np.shape(sum_mfcc_list)[1],))
+        for j in range(0,np.shape(sum_mfcc_list)[1]):
+            sum_mfcc_list_aux[j] = (np.asarray(sum_mfcc_list)[i,j] - element_mean[j])/element_std[j]
+        new_sum_mfcc.append(sum_mfcc_list_aux)
+
     labels = np.asarray(labels)
     agegroup = np.asarray(agegroup)
 
@@ -254,12 +268,12 @@ def multidim_all(classes, babies, age, args):
 
     # UMAP
     mapper_sum = umap.UMAP(random_state=args.seed, spread=args.spread, n_neighbors=args.n_neigh, min_dist=args.min_d,
-                           n_components=args.n_comp).fit(np.array(sum_mfcc_list))
+                           n_components=args.n_comp).fit(np.array(new_sum_mfcc))
 
     umap.plot.points(mapper_sum, np.asarray(labels), color_key_cmap="manual") #, background='black')
     plt.savefig(
         args.data_dir + '/' + 'ALLbabies_LENAlabels_' + '_opensmile_day_UMAP_mfcc_sum_' + str(
-            args.n_neigh) + '_' + str(int(args.portion_size)) + '.pdf')
+            args.n_neigh) + '_' + str(int(args.portion_size)) + '.png')
     plt.close('all')
 
     mapper_avg = umap.UMAP(random_state=args.seed, spread=args.spread, n_neighbors=args.n_neigh, min_dist=args.min_d,
@@ -267,7 +281,7 @@ def multidim_all(classes, babies, age, args):
     umap.plot.points(mapper_avg, np.asarray(labels), color_key_cmap='manual', background='black')
     plt.savefig(
         args.data_dir + '/' + 'ALLbabies_LENAlabels_' + '_opensmile_day_UMAP_mfcc_avg_' + str(
-            args.n_neigh) + '_' + str(int(args.portion_size)) + '.pdf')
+            args.n_neigh) + '_' + str(int(args.portion_size)) + '.png')
     plt.close('all')
 
     # Create summary
@@ -283,11 +297,8 @@ def multidim_all(classes, babies, age, args):
             csvwriter.writerow([i, basename[i], babyname[i], timename[i], labels[i], np.where(np.asarray(classes)==labels[i])[0][0], mapper_sum.embedding_[i][0], mapper_sum.embedding_[i][1], mapper_avg.embedding_[i][0], mapper_avg.embedding_[i][1], agegroup[i]])
             i = i + 1
 
-    print('Done')
-    input()
-
     # t-SNE
-    tsne_result = TSNE(n_components=2, learning_rate='auto', init='random').fit_transform(np.array(sum_mfcc_list))
+    tsne_result = TSNE(n_components=2, learning_rate='auto', init='random').fit_transform(np.array(new_sum_mfcc))
 
     fig, ax = plt.subplots(figsize=(10, 10))
     ax.scatter(tsne_result[:, 0], tsne_result[:, 1], c=colors, s=0.1, alpha=0.8)
@@ -297,11 +308,11 @@ def multidim_all(classes, babies, age, args):
     ax.spines['top'].set_visible(False)
     plt.legend(handles=legend_elements)
     plt.savefig(args.data_dir + '/' + 'ALLbabies_LENAlabels_' + '_opensmile_day_TSNE_mfcc_sum_' + str(
-        args.n_neigh) + '_' + str(int(args.portion_size)) + '.pdf')
+        args.n_neigh) + '_' + str(int(args.portion_size)) + '.png')
 
     # PCA
     pca = PCA(n_components=4)
-    pca_result = pca.fit_transform(np.array(sum_mfcc_list))
+    pca_result = pca.fit_transform(np.array(new_sum_mfcc))
 
     fig, ax = plt.subplots(figsize=(10, 10))
     ax.scatter(pca_result[:,0], pca_result[:,1], c=colors, s=0.1, alpha=0.8)
@@ -311,7 +322,7 @@ def multidim_all(classes, babies, age, args):
     ax.spines['top'].set_visible(False)
     plt.legend(handles=legend_elements)
     plt.savefig(args.data_dir + '/' + 'ALLbabies_LENAlabels_' + '_opensmile_day_PCA_mfcc_sum_' + str(
-            args.n_neigh) + '_' + str(int(args.portion_size)) + '.pdf')
+            args.n_neigh) + '_' + str(int(args.portion_size)) + '.png')
 
     # Load data and create a single csv for each baby (to work better)
     summary = pd.read_csv(args.data_dir + '/' + 'ALL_BABYADULT_summary_LENAlabels_' + '_opensmile_day_UMAP_mfcc.csv')
@@ -1046,8 +1057,69 @@ def single(classes, baby, args):
             mfcc_table = pd.read_csv(data[i], sep=';')
             mfcc_table = mfcc_table.to_numpy()
 
-            # plot spectrogram
-            # plot MFCC
+            if i == 0:
+                # plot spectrogram
+                name = os.path.basename(data[i])
+                path_spectro = '/Users/silviapagliarini/Documents/Datasets/HumanLabels/interspeech/' + name[0:11] + '_segments/' + name[0:-9] + '.wav'
+
+                read_aux, sr = librosa.load(path_spectro, mono=True, sr=16000)
+
+                X = librosa.stft(read_aux, n_fft=args.N, hop_length=args.H, win_length=args.N, window='hann',
+                                 pad_mode='constant', center=True)
+                T_coef = np.arange(X.shape[1]) * args.H / sr * 1000
+                spectrogram_aux = np.log(1 + 100 * np.abs(X ** 2))
+                K = args.N // 2
+                F_coef = np.arange(K + 1) * sr / args.N
+
+                plt.figure(figsize=(15, 3))
+                extent = [T_coef[0], T_coef[-1], F_coef[0], F_coef[-1]]
+                plt.imshow(spectrogram_aux, aspect='auto', cmap='inferno', origin='lower', extent=extent)
+                plt.xlabel('Time (s)')
+                plt.ylabel('Frequency (Hz)')
+                plt.tight_layout()
+                plt.savefig(args.data_dir + '/' + name[0:11] + '_test_spectrogram' + '.pdf')
+
+                # plot MFCC
+                mfcc = np.zeros((13, np.shape(mfcc_table)[0]))
+                velocity  = np.zeros((13, np.shape(mfcc_table)[0]))
+                acceleration = np.zeros((13, np.shape(mfcc_table)[0]))
+                for k in range(0, np.shape(mfcc_table)[0]):
+                    mfcc[:, k] = mfcc_table[k][2:15]
+                    velocity[:, k] = mfcc_table[k][15:28]
+                    acceleration[:, k] = mfcc_table[k][28:41]
+
+                plt.figure(figsize=(15, 3))
+                plt.imshow(np.array(mfcc), aspect='auto', cmap='inferno', origin='lower')
+                plt.xlabel('Time (steps)')
+                plt.ylabel('Frequency (Hz)')
+                plt.tight_layout()
+                plt.savefig(args.data_dir + '/' + name[0:11] + '_test_mfcc' + '.pdf')
+
+                # plot 1st and 2nd derivatives
+                plt.figure(figsize=(15, 3))
+                plt.imshow(np.array(velocity), aspect='auto', cmap='inferno', origin='lower')
+                plt.xlabel('Time (steps)')
+                plt.ylabel('Frequency (Hz)')
+                plt.tight_layout()
+                plt.savefig(args.data_dir + '/' + name[0:11] + '_test_velocity' + '.pdf')
+
+                plt.figure(figsize=(15, 3))
+                plt.imshow(np.array(acceleration), aspect='auto', cmap='inferno', origin='lower')
+                plt.xlabel('Time (steps)')
+                plt.ylabel('Frequency (Hz)')
+                plt.tight_layout()
+                plt.savefig(args.data_dir + '/' + name[0:11] + '_test_acceleration' + '.pdf')
+
+                sum_mfcc = 0
+                k = 0
+                while k < np.shape(mfcc_table)[0]:
+                    sum_mfcc = sum_mfcc + mfcc_table[k][2::]
+                    k = k + 1
+
+                plt.figure()
+                plt.plot(sum_mfcc)
+                plt.tight_layout()
+                plt.savefig(args.data_dir + '/' + name[0:11] + '_test_sum' + '.pdf')
 
             sum_mfcc = 0
             k = 0
@@ -1157,6 +1229,11 @@ if __name__ == '__main__':
     comparison_args.add_argument('--all', type = bool, help='Are we considering all the babies in the same space?', default=False)
     comparison_args.add_argument('--R', type = bool, help='True if R fit curve is defined manually. Change coeffs.', default=True)
 
+    read_sound_args = parser.add_argument_group('read_sound')
+    read_sound_args.add_argument('--sampling_rate', type=int, default=16000)
+    read_sound_args.add_argument('--N', type=int, help='Nfft spectrogram librosa', default=1024)
+    read_sound_args.add_argument('--H', type=int, help='Hop length spectrogram librosa', default=64)
+
     args = parser.parse_args()
 
     if args.output_dir != None:
@@ -1188,6 +1265,7 @@ if __name__ == '__main__':
 
         # List of babies
         summary = pd.read_csv(args.data_dir + '/' + 'baby_list_basicONLYallAGES.csv')
+        #summary = pd.read_csv(args.data_dir + '/' + 'babies_list.csv')
         summary = pd.DataFrame.to_numpy(summary)
         babies = summary[:, 0]
         age = summary[:, 1]
