@@ -176,7 +176,7 @@ def multidim_all(classes, babies, age, args):
     babyname = []
     timename = []
     agegroup = []
-    for b in range(0, 2): #len(new_babies)):
+    for b in range(0, len(new_babies)):
         for c in range(0, len(classes)):
             data = glob2.glob(args.data_dir + '/' + new_babies[b] + '*/' + classes[c] + '/' + '*.mfcc.csv')
             data = np.asarray(data)
@@ -251,12 +251,10 @@ def multidim_all(classes, babies, age, args):
         element_mean[j] = np.mean(np.asarray(sum_mfcc_list)[:, j])
         element_std[j] = np.std(np.asarray(sum_mfcc_list)[:, j])
 
-    new_sum_mfcc = []
-    for i in range(0, np.shape(sum_mfcc_list)[0]):
-        sum_mfcc_list_aux = np.zeros((np.shape(sum_mfcc_list)[1],))
-        for j in range(0,np.shape(sum_mfcc_list)[1]):
-            sum_mfcc_list_aux[j] = (np.asarray(sum_mfcc_list)[i,j] - element_mean[j])/element_std[j]
-        new_sum_mfcc.append(sum_mfcc_list_aux)
+    # Each sum minus the mean sum over each mfcc, velocity, acceleration
+    sum_mfcc_list_aux = (np.asarray(sum_mfcc_list) - element_mean)
+    # Each new sum divided by the std over each mfcc, velocity, acceleration
+    new_sum_mfcc = np.asarray(sum_mfcc_list_aux)/element_std
 
     labels = np.asarray(labels)
     agegroup = np.asarray(agegroup)
