@@ -1108,17 +1108,6 @@ def single(classes, baby, args):
                 plt.tight_layout()
                 plt.savefig(args.data_dir + '/' + name[0:11] + '_test_acceleration' + '.pdf')
 
-                sum_mfcc = 0
-                k = 0
-                while k < np.shape(mfcc_table)[0]:
-                    sum_mfcc = sum_mfcc + mfcc_table[k][2::]
-                    k = k + 1
-
-                plt.figure()
-                plt.plot(sum_mfcc)
-                plt.tight_layout()
-                plt.savefig(args.data_dir + '/' + name[0:11] + '_test_sum' + '.pdf')
-
             sum_mfcc = 0
             k = 0
             while k < np.shape(mfcc_table)[0]:
@@ -1130,6 +1119,30 @@ def single(classes, baby, args):
             basename.append(os.path.basename(data[i]))
 
             i = i + 1
+
+
+    element_mean = np.zeros((np.shape(sum_mfcc_list)[1],))
+    element_std = np.zeros((np.shape(sum_mfcc_list)[1],))
+    for j in range(0,np.shape(sum_mfcc_list)[1]):
+        element_mean[j] = np.mean(np.asarray(sum_mfcc_list)[:, j])
+        element_std[j] = np.std(np.asarray(sum_mfcc_list)[:, j])
+
+    # Each sum minus the mean sum over each mfcc, velocity, acceleration
+    sum_mfcc_list_aux = (np.asarray(sum_mfcc_list) - element_mean)
+    # Each new sum divided by the std over each mfcc, velocity, acceleration
+    new_sum_mfcc = np.asarray(sum_mfcc_list_aux)/element_std
+
+    # Plot sum
+    i = 0
+    plt.figure()
+    plt.plot(sum_mfcc_list[i])
+    plt.tight_layout()
+    plt.savefig(args.data_dir + '/' + baby + '_test_sum' + '.pdf')
+
+    plt.figure()
+    plt.plot(new_sum_mfcc[i])
+    plt.tight_layout()
+    plt.savefig(args.data_dir + '/' + baby + '_test_sum_zscore' + '.pdf')
 
     labels = np.asarray(labels)
 
@@ -1145,6 +1158,15 @@ def single(classes, baby, args):
     umap.plot.points(mapper_sum, np.asarray(labels), color_key_cmap="manual")  # , background='black')
     plt.savefig(
         args.data_dir + '/' + 'baby_' + baby + '_opensmile_day_UMAP_mfcc_sum_' + str(
+            args.n_neigh) + '_' + str(int(args.portion_size)) + '.pdf')
+    plt.close('all')
+
+    mapper_sum = umap.UMAP(random_state=args.seed, spread=args.spread, n_neighbors=args.n_neigh, min_dist=args.min_d,
+                           n_components=args.n_comp).fit(np.array(new_sum_mfcc))
+
+    umap.plot.points(mapper_sum, np.asarray(labels), color_key_cmap="manual")  # , background='black')
+    plt.savefig(
+        args.data_dir + '/' + 'baby_' + baby + '_opensmile_day_UMAP_mfcc_sum_zscore' + str(
             args.n_neigh) + '_' + str(int(args.portion_size)) + '.pdf')
     plt.close('all')
 
@@ -1181,7 +1203,7 @@ def single(classes, baby, args):
     plt.yticks(fontsize=20)
     plt.legend(handles=legend_elements, fontsize=20)
     plt.savefig(
-        args.data_dir + '/' + 'manual_baby_' + baby + '_opensmile_day_UMAP_mfcc_sum_' + str(
+        args.data_dir + '/' + 'manual_baby_' + baby + '_opensmile_day_UMAP_mfcc_sumzscore_' + str(
             args.n_neigh) + '_' + str(int(args.portion_size)) + '.pdf')
 
     print('Done')

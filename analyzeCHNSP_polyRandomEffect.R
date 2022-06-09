@@ -1,7 +1,7 @@
 library(lme4)
 library(lmerTest)
 
-setwd('~/Documents/opensmile/HumanData_analysis/completeDataset/AllAges_CHNSP_FAN_MAN')
+setwd('~/Documents/opensmile/HumanData_analysis/completeDataset/AllAges_CHNNSP_CHNSP_FAN_MAN_200')
 ourdata = read.csv('baby_list.csv')
 
 ######
@@ -9,14 +9,15 @@ ourdata = read.csv('baby_list.csv')
 ######
 CHNSPentropy_UMAP = ourdata$CHNSPentropyUMAP
 CHNSPentropy_tSNE = ourdata$CHNSPentropytSNE
-CHNSPcentroid_self_UMAP = ourdata$CENTROIDdist_CHSNPself_UMAP
-CHNSP_FAN_centroid_UMAP = ourdata$CENTROID_CHSNP_FAN_UMAP
-CHNSPcentroid_self_PCA = ourdata$CENTROIDdist_CHSNPself_PCA
-CHNSP_FAN_centroid_PCA = ourdata$CENTROID_CHSNP_FAN_PCA
-CHNSPcentroid_self_tSNE = ourdata$CENTROIDdist_CHSNPself_tSNE
-CHNSP_FAN_centroid_tSNE = ourdata$CENTROID_CHSNP_FAN_tSNE
-CHNSP_selfPRE_covariance = ourdata$cov_BBself_pre
-CHNSP_self_covariance = ourdata$cov_BBself
+CHNSPcentroid_self_UMAP = ourdata$CENTROIDdist_CHNSPself_UMAP
+CHNNSPcentroid_self_UMAP = ourdata$CENTROIDdist_CHNNSPself_UMAP
+CHNSP_FAN_centroid_UMAP = ourdata$CENTROID_CHNSP_FAN_UMAP
+CHNSP_MAN_centroid_UMAP = ourdata$CENTROID_CHNSP_MAN_UMAP
+CHNNSP_FAN_centroid_UMAP = ourdata$CENTROID_CHNNSP_FAN_UMAP
+CHNNSP_CHNSP_centroid_UMAP = ourdata$CENTROID_CHNNSP_CHNSP_UMAP
+CHNNSP_MAN_centroid_UMAP = ourdata$CENTROID_CHNNSP_MAN_UMAP
+CHNSP_FAN_centroid_PCA = ourdata$CENTROID_CHNSP_FAN_PCA
+CHNSP_FAN_centroid_tSNE = ourdata$CENTROID_CHNSP_FAN_tSNE
 AGE =ourdata$AGE
 AgeGroup = ourdata$AGEGROUP 
 ChildID = ourdata$CHILDID
