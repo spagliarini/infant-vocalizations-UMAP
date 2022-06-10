@@ -1294,7 +1294,7 @@ if __name__ == '__main__':
 
     if args.option == 'plot':
         #classes = ['CHNSP', 'FAN', 'MAN']
-        classes = ['CHNNSP', 'CHNSP', 'FAN', 'MAN']
+        classes = ['CHNNSP', 'CHNSP', 'FAN']
         #classes = ['CHNSP', 'FAN']
         #classes = ['CHNNSP', 'CHNSP']
         #classes = ['CHNSP']
