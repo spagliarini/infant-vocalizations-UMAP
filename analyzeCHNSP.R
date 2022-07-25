@@ -1,7 +1,7 @@
 library(lme4)
 library(lmerTest)
 
-setwd('~/Documents/opensmile/HumanData_analysis/completeDataset/AllAges_CHNNSP_CHNSP_FAN_MAN_200')
+setwd('~/Documents/opensmile/HumanData_analysis/completeDataset/AllAges_CHNNSP_CHNSP_FAN_MAN_200_52')
 ourdata = read.csv('baby_list.csv')
 
 ######
@@ -12,8 +12,10 @@ CHNSPentropy_tSNE = ourdata$CHNSPentropytSNE
 CHNNSPentropy_UMAP = ourdata$CHNNSPentropyUMAP
 CHNNSPentropy_tSNE = ourdata$CHNNSPentropytSNE
 CHNSPcentroid_self_UMAP = ourdata$CENTROIDdist_CHNSPself_UMAP
+CHNSPcentroid_self_UMAPavg = ourdata$CENTROIDdist_CHNSPself_UMAPavg
 CHNNSPcentroid_self_UMAP = ourdata$CENTROIDdist_CHNNSPself_UMAP
 CHNSP_FAN_centroid_UMAP = ourdata$CENTROID_CHNSP_FAN_UMAP
+CHNSP_FAN_centroid_UMAPavg = ourdata$CENTROID_CHNSP_FAN_UMAPavg
 CHNSP_MAN_centroid_UMAP = ourdata$CENTROID_CHNSP_MAN_UMAP
 CHNNSP_FAN_centroid_UMAP = ourdata$CENTROID_CHNNSP_FAN_UMAP
 CHNNSP_MAN_centroid_UMAP = ourdata$CENTROID_CHNNSP_MAN_UMAP
@@ -29,8 +31,10 @@ ChildID = ourdata$CHILDID
 mean_CHNSPentropy_UMAP = mean(CHNSPentropy_UMAP)
 mean_CHNSPentropy_tSNE = mean(CHNSPentropy_tSNE)
 mean_CHNSPcentroid_self_UMAP = mean(CHNSPcentroid_self_UMAP)
+mean_CHNSPcentroid_self_UMAPavg = mean(CHNSPcentroid_self_UMAPavg)
 mean_CHNNSPcentroid_self_UMAP = mean(CHNNSPcentroid_self_UMAP)
 mean_CHNSP_FAN_centroid_UMAP = mean(CHNSP_FAN_centroid_UMAP)
+mean_CHNSP_FAN_centroid_UMAPavg = mean(CHNSP_FAN_centroid_UMAPavg)
 mean_CHNSP_MAN_centroid_UMAP = mean(CHNSP_MAN_centroid_UMAP)
 mean_CHNNSP_FAN_centroid_UMAP = mean(CHNNSP_FAN_centroid_UMAP)
 mean_CHNNSP_MAN_centroid_UMAP = mean(CHNNSP_MAN_centroid_UMAP)
@@ -38,8 +42,10 @@ mean_CHNNSP_MAN_centroid_UMAP = mean(CHNNSP_MAN_centroid_UMAP)
 sd_CHNSPentropy_UMAP = sd(CHNSPentropy_UMAP)
 sd_CHNSPentropy_tSNE = sd(CHNSPentropy_tSNE)
 sd_CHNSPcentroid_self_UMAP = sd(CHNSPcentroid_self_UMAP)
+sd_CHNSPcentroid_self_UMAPavg = sd(CHNSPcentroid_self_UMAPavg)
 sd_CHNNSPcentroid_self_UMAP = sd(CHNNSPcentroid_self_UMAP)
 sd_CHNSP_FAN_centroid_UMAP = sd(CHNSP_FAN_centroid_UMAP)
+sd_CHNSP_FAN_centroid_UMAPavg = sd(CHNSP_FAN_centroid_UMAPavg)
 sd_CHNSP_MAN_centroid_UMAP = sd(CHNSP_MAN_centroid_UMAP)
 sd_CHNNSP_FAN_centroid_UMAP = sd(CHNNSP_FAN_centroid_UMAP)
 sd_CHNNSP_MAN_centroid_UMAP = sd(CHNNSP_MAN_centroid_UMAP)
@@ -142,6 +148,22 @@ pred = predCentroidself[ix]
 lines(ourdata$AGE[ix],predCentroidself[ix])
 save(pred, file="UMAP_CHNSPcentroidSELF.Rdata")
 
+#avg
+plot(ourdata$AGE, ourdata$CENTROIDdist_CHNSPself_UMAPavg,
+     xlab = "Infant age (days)",
+     ylab = "Distance from the centroid CHNSP")
+
+lmPoly = lm(CHNSPcentroid_self_UMAPavg ~ poly(AGE,2), data = ourdata)
+summary(lmPoly)
+confint(lmPoly)
+
+predCentroidselfAVG = predict(lmPoly)
+ix = sort(ourdata$AGE,index.return=T)$ix
+pred = predCentroidselfAVG[ix]
+
+lines(ourdata$AGE[ix],predCentroidselfAVG[ix])
+save(pred, file="UMAP_CHNSPcentroidSELFavg.Rdata")
+
 # tSNE
 plot(ourdata$AGE, ourdata$CENTROIDdist_CHNSPself_tSNE,
      xlab = "Infant age (days)",
@@ -193,6 +215,23 @@ pred = predCHNSP_FAN[ix]
 
 lines(ourdata$AGE[ix],predCHNSP_FAN[ix])
 save(pred, file="UMAP_CHNSP_FAN_centroid.Rdata")
+
+#avg
+plot(ourdata$AGE, ourdata$CENTROID_CHNSP_FAN_UMAPavg,
+     xlab = "Infant age (days)",
+     ylab = "Distance between centroids (CHNSP-FAN)")
+
+lmPoly = lm(CHNSP_FAN_centroid_UMAPavg ~ poly(AGE,2), data = ourdata)
+summary(lmPoly)
+confint(lmPoly)
+
+predCHNSP_FANavg = predict(lmPoly)
+ix = sort(ourdata$AGE,index.return=T)$ix
+pred = predCHNSP_FANavg[ix]
+
+lines(ourdata$AGE[ix],predCHNSP_FANavg[ix])
+save(pred, file="UMAP_CHNSP_FAN_centroidAVG.Rdata")
+
 
 # tSNE
 plot(ourdata$AGE, ourdata$CENTROID_CHNSP_FAN_tSNE,
@@ -286,3 +325,4 @@ pred = predCHNNSP_CHNSP[ix]
 
 lines(ourdata$AGE[ix],predCHNNSP_MAN[ix])
 save(pred, file="UMAP_CHNNSP_CHNSP_centroid.Rdata")
+

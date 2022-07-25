@@ -276,7 +276,7 @@ def multidim_all(classes, babies, age, args):
 
     mapper_avg = umap.UMAP(random_state=args.seed, spread=args.spread, n_neighbors=args.n_neigh, min_dist=args.min_d,
                        n_components=args.n_comp).fit(np.array(average_mfcc_list))
-    umap.plot.points(mapper_avg, np.asarray(labels), color_key_cmap='manual', background='black')
+    umap.plot.points(mapper_avg, np.asarray(labels), color_key_cmap='manual') #, background='black')
     plt.savefig(
         args.data_dir + '/' + 'ALLbabies_LENAlabels_' + '_opensmile_day_UMAP_mfcc_avg_' + str(
             args.n_neigh) + '_' + str(int(args.portion_size)) + '.png')
@@ -389,6 +389,9 @@ def my_plot(classes, args):
     umapX = summary["umap sum x"]
     umapY = summary["umap sum y"]
 
+    umapXavg = summary["umap avg x"]
+    umapYavg = summary["umap avg y"]
+
     colors = []
     i = 0
     while i < len(umapX):
@@ -416,6 +419,17 @@ def my_plot(classes, args):
     plt.yticks(fontsize=20)
     plt.legend(handles=legend_elements, fontsize=20)
     plt.savefig(args.data_dir + '/' + "_UMAPmanual.png")
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.scatter(umapXavg, umapYavg, c=colors, cmap='manual', s=0.1, alpha=0.8)
+    ax.set_xlim(np.min(umapXavg)-0.5, np.max(umapXavg)+0.5)
+    ax.set_ylim(np.min(umapYavg)-0.5, np.max(umapYavg)+0.5)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
+    plt.legend(handles=legend_elements, fontsize=20)
+    plt.savefig(args.data_dir + '/' + "_UMAPmanualAVG.png")
 
     fig, ax = plt.subplots(figsize=(10, 10))
     ax.scatter(umapX, umapY, c=colors_age, cmap='age_manual', s=0.1, alpha=0.8)
@@ -479,6 +493,8 @@ def stat(classes, baby_id, args):
         labelsID = summary[:, 5]
         umapX = summary[:, 6]
         umapY = summary[:, 7]
+        umapXavg = summary[:, 8]
+        umapYavg = summary[:, 9]
         pcaX = summary[:, 10]
         pcaY = summary[:, 11]
         tsneX = summary[:, 12]
@@ -492,10 +508,13 @@ def stat(classes, baby_id, args):
 
     # All in an array
     all_umap = np.zeros((len(umapX),2))
+    all_umapAVG = np.zeros((len(umapXavg),2))
     all_pca = np.zeros((len(pcaX),2))
     all_tsne = np.zeros((len(tsneX),2))
     all_umap[:,0] = umapX
     all_umap[:,1] = umapY
+    all_umapAVG[:, 0] = umapXavg
+    all_umapAVG[:, 1] = umapYavg
     all_pca[:,0] = pcaX
     all_pca[:,1] = pcaY
     all_tsne[:,0] = tsneX
@@ -506,6 +525,9 @@ def stat(classes, baby_id, args):
     all_umapX = []
     all_umapY = []
     all_umapXY = []
+    all_umapXavg = []
+    all_umapYavg = []
+    all_umapXYavg = []
     all_pcaX = []
     all_pcaY = []
     all_pcaXY = []
@@ -517,6 +539,7 @@ def stat(classes, baby_id, args):
     hist2d_UMAP = []
     hist2d_tSNE = []
     for i in range(0,len(classes)):
+        all_filename.append(time[np.where(labels == classes[i])[0]])
         # UMAP
         aux_X = umapX[np.where(labels==classes[i])[0]]
         aux_Y = umapY[np.where(labels==classes[i])[0]]
@@ -524,12 +547,21 @@ def stat(classes, baby_id, args):
         all_umapX.append(aux_X)
         all_umapY.append(aux_Y)
         all_XY_aux = np.zeros((len(aux_X),2))
-        all_filename.append(time[np.where(labels==classes[i])[0]])
         for j in range(0, len(aux_X)):
             all_XY_aux[j,0] = aux_X[j]
             all_XY_aux[j,1] = aux_Y[j]
         ratio.append(len(aux_X)/len(umapX))
         all_umapXY.append(all_XY_aux)
+
+        aux_Xavg = umapXavg[np.where(labels == classes[i])[0]]
+        aux_Yavg = umapYavg[np.where(labels == classes[i])[0]]
+        all_umapXavg.append(aux_Xavg)
+        all_umapYavg.append(aux_Yavg)
+        all_XYavg_aux = np.zeros((len(aux_Xavg), 2))
+        for j in range(0, len(aux_Xavg)):
+            all_XYavg_aux[j,0] = aux_Xavg[j]
+            all_XYavg_aux[j,1] = aux_Yavg[j]
+        all_umapXYavg.append(all_XYavg_aux)
 
         hist_aux, xedges, yedges = np.histogram2d(aux_X, aux_Y, bins=10)
         hist2d_UMAP.append(hist_aux)
@@ -567,6 +599,9 @@ def stat(classes, baby_id, args):
     centroids = []
     centroids_min_dist = np.zeros((len(classes), len(classes)))
     centroids_mean_dist = np.zeros((len(classes), len(classes)))
+    centroidsAVG = []
+    centroids_min_distAVG = np.zeros((len(classes), len(classes)))
+    centroids_mean_distAVG = np.zeros((len(classes), len(classes)))
     centroids_PCA = []
     centroids_min_dist_PCA = np.zeros((len(classes), len(classes)))
     centroids_mean_dist_PCA = np.zeros((len(classes), len(classes)))
@@ -580,6 +615,9 @@ def stat(classes, baby_id, args):
         centroid_UMAP = (sum(all_umapX[i]) / len(all_umapX[i]), sum(all_umapY[i]) / len(all_umapY[i]))
         centroids.append(centroid_UMAP)
 
+        centroid_UMAPavg = (sum(all_umapXavg[i]) / len(all_umapXavg[i]), sum(all_umapYavg[i]) / len(all_umapYavg[i]))
+        centroidsAVG.append(centroid_UMAPavg)
+
         centroid_PCA = (sum(all_pcaX[i]) / len(all_pcaX[i]), sum(all_pcaY[i]) / len(all_pcaY[i]))
         centroids_PCA.append(centroid_PCA)
 
@@ -589,6 +627,7 @@ def stat(classes, baby_id, args):
         # distance from the centroid
         for k in range(0,len(classes)):
             dist_UMAP = []
+            dist_UMAPavg = []
             dist_PCA = []
             dist_tSNE = []
             for j in range(0, len(all_umapX[k])):
@@ -596,6 +635,11 @@ def stat(classes, baby_id, args):
                 dist_aux_UMAP = np.linalg.norm(aux - centroid_UMAP)
                 if dist_aux_UMAP != 0:
                     dist_UMAP.append(dist_aux_UMAP)
+
+                aux = np.array([all_umapXavg[k][j], all_umapYavg[k][j]])
+                dist_aux_UMAPavg = np.linalg.norm(aux - centroid_UMAPavg)
+                if dist_aux_UMAPavg != 0:
+                    dist_UMAPavg.append(dist_aux_UMAPavg)
 
                 aux = np.array([all_pcaX[k][j], all_pcaY[k][j]])
                 dist_aux_PCA = np.linalg.norm(aux - centroid_PCA)
@@ -609,6 +653,8 @@ def stat(classes, baby_id, args):
 
             centroids_min_dist[i, k] = np.min(dist_UMAP)
             centroids_mean_dist[i, k] = np.mean(dist_UMAP)
+            centroids_min_distAVG[i, k] = np.min(dist_UMAPavg)
+            centroids_mean_distAVG[i, k] = np.mean(dist_UMAPavg)
             centroids_min_dist_PCA[i, k] = np.min(dist_PCA)
             centroids_mean_dist_PCA[i, k] = np.mean(dist_PCA)
             centroids_min_dist_tSNE[i, k] = np.min(dist_tSNE)
@@ -624,12 +670,15 @@ def stat(classes, baby_id, args):
 
     # Across classes centroids distance
     centroids = np.asarray(centroids)
+    centroidsAVG = np.asarray(centroidsAVG)
     centroids_PCA = np.asarray(centroids_PCA)
     centroids_tSNE = np.asarray(centroids_tSNE)
     dist_centroids = np.zeros((len(classes), len(classes)))
+    dist_centroidsAVG = np.zeros((len(classes), len(classes)))
     for i in range(0, len(classes)):
         for j in range(0, len(classes)):
             dist_centroids[i,j] = np.linalg.norm(centroids[i]-centroids[j])
+            dist_centroidsAVG[i,j] = np.linalg.norm(centroidsAVG[i]-centroidsAVG[j])
 
     dist_centroids_PCA = np.zeros((len(classes), len(classes)))
     for i in range(0, len(classes)):
@@ -644,6 +693,8 @@ def stat(classes, baby_id, args):
     # Save a dictionary with the quantities
     dataset_summary = {'how_many': how_many, 'entropy_UMAP': entropy_UMAP, 'entropy_tSNE': entropy_tSNE,
                        'Dist_centr_UMAP': dist_centroids, 'centroids': centroids, 'centroid_mean_dis': centroids_mean_dist,
+                       'Dist_centr_UMAPavg': dist_centroidsAVG, 'centroidsAVG': centroidsAVG,
+                       'centroid_mean_disAVG': centroids_mean_distAVG,
                        'Dist_centr_PCA': dist_centroids_PCA, 'centroids_PCA': centroids_PCA, 'centroid_mean_dis_PCA': centroids_mean_dist_PCA,
                        'Dist_centr_tSNE': dist_centroids_tSNE, 'centroids_tSNE': centroids_tSNE, 'centroid_mean_dis_tSNE': centroids_mean_dist_tSNE,
                        'Ratio': ratio}
@@ -691,6 +742,7 @@ def plot_stat_complete(classes, args):
     how_many_classes = np.zeros((len(babies), len(classes)))
     how_many_CHNSP = []
     dist_CHNSP_FAN_UMAP = []
+    dist_CHNSP_FAN_UMAPavg = []
     dist_CHNSP_FAN_PCA = []
     dist_CHNSP_FAN_tSNE = []
     dist_CHNNSP_FAN_UMAP = []
@@ -706,6 +758,7 @@ def plot_stat_complete(classes, args):
     baby_ID = []
     agegroup = []
     centroid_CHNSP_self_UMAP = []
+    centroid_CHNSP_self_UMAPavg = []
     centroid_CHNSP_self_PCA = []
     centroid_CHNSP_self_tSNE = []
     centroid_CHNNSP_self_UMAP = []
@@ -733,6 +786,7 @@ def plot_stat_complete(classes, args):
         # Centroids distance from CHNSP and FAN
         if pos_FAN != -1 and pos_CHNSP != -1:
             dist_CHNSP_FAN_UMAP.append(dataset_summary['Dist_centr_UMAP'][pos_CHNSP, pos_FAN])
+            dist_CHNSP_FAN_UMAPavg.append(dataset_summary['Dist_centr_UMAPavg'][pos_CHNSP, pos_FAN])
             dist_CHNSP_FAN_PCA.append(dataset_summary['Dist_centr_PCA'][pos_CHNSP, pos_FAN])
             dist_CHNSP_FAN_tSNE.append(dataset_summary['Dist_centr_tSNE'][pos_CHNSP, pos_FAN])
         # Centroids distance from CHNNSP and FAN
@@ -753,6 +807,7 @@ def plot_stat_complete(classes, args):
         # Distance between CHNSP vocalizations and CHNSP centroid + entropy of CHNSP vocalizations
         if pos_CHNSP != -1:
             centroid_CHNSP_self_UMAP.append(dataset_summary['centroid_mean_dis'][pos_CHNSP, pos_CHNSP])
+            centroid_CHNSP_self_UMAPavg.append(dataset_summary['centroid_mean_disAVG'][pos_CHNSP, pos_CHNSP])
             centroid_CHNSP_self_PCA.append(dataset_summary['centroid_mean_dis_PCA'][pos_CHNSP, pos_CHNSP])
             centroid_CHNSP_self_tSNE.append(dataset_summary['centroid_mean_dis_tSNE'][pos_CHNSP, pos_CHNSP])
             entropy_UMAP_CHNSP[i] = dataset_summary['entropy_UMAP'][pos_CHNSP]
@@ -777,9 +832,11 @@ def plot_stat_complete(classes, args):
     baby_ID = np.asarray(baby_ID)
     agegroup = np.asarray(agegroup)
     dist_CHNSP_FAN_UMAP = np.asarray(dist_CHNSP_FAN_UMAP)
+    dist_CHNSP_FAN_UMAPavg= np.asarray(dist_CHNSP_FAN_UMAPavg)
     dist_CHNSP_MAN_UMAP = np.asarray(dist_CHNSP_MAN_UMAP)
     dist_CHNNSP_CHNSP_UMAP = np.asarray(dist_CHNNSP_CHNSP_UMAP)
     centroid_CHNSP_self_UMAP = np.asarray(centroid_CHNSP_self_UMAP)
+    centroid_CHNSP_self_UMAPavg = np.asarray(centroid_CHNSP_self_UMAPavg)
     dist_CHNNSP_FAN_UMAP = np.asarray(dist_CHNNSP_FAN_UMAP)
     dist_CHNNSP_MAN_UMAP = np.asarray(dist_CHNNSP_MAN_UMAP)
     centroid_CHNNSP_self_UMAP = np.asarray(centroid_CHNNSP_self_UMAP)
@@ -808,6 +865,7 @@ def plot_stat_complete(classes, args):
     summary_table['CHILDID'] = baby_ID
     summary_table['AGEGROUP'] = agegroup
     summary_table['CENTROID_CHNSP_FAN_UMAP'] = dist_CHNSP_FAN_UMAP
+    summary_table['CENTROID_CHNSP_FAN_UMAPavg'] = dist_CHNSP_FAN_UMAPavg
     summary_table['CENTROID_CHNSP_MAN_UMAP'] = dist_CHNSP_MAN_UMAP
     summary_table['CENTROID_CHNNSP_FAN_UMAP'] = dist_CHNNSP_FAN_UMAP
     summary_table['CENTROID_CHNNSP_MAN_UMAP'] = dist_CHNNSP_MAN_UMAP
@@ -815,6 +873,7 @@ def plot_stat_complete(classes, args):
     summary_table['CENTROID_CHNSP_FAN_PCA'] = dist_CHNSP_FAN_PCA
     summary_table['CENTROID_CHNSP_FAN_tSNE'] = dist_CHNSP_FAN_tSNE
     summary_table['CENTROIDdist_CHNSPself_UMAP'] = centroid_CHNSP_self_UMAP
+    summary_table['CENTROIDdist_CHNSPself_UMAPavg'] = centroid_CHNSP_self_UMAPavg
     summary_table['CENTROIDdist_CHNNSPself_UMAP'] = centroid_CHNNSP_self_UMAP
     summary_table['CENTROIDdist_CHNSPself_tSNE'] = centroid_CHNSP_self_tSNE
     summary_table['CENTROIDdist_CHNSPself_tSNE'] = centroid_CHNSP_self_tSNE
@@ -855,6 +914,8 @@ def plot_stat_complete(classes, args):
     if pos_CHNSP != -1:
         aux = readR.read_r(args.data_dir + '/' + 'UMAP_CHNSPcentroidSELF.Rdata')
         UMAP_fit_CHNSPselfCENTROID = aux['pred']
+        aux = readR.read_r(args.data_dir + '/' + 'UMAP_CHNSPcentroidSELFavg.Rdata')
+        UMAP_fit_CHNSPselfCENTROIDavg = aux['pred']
         aux = readR.read_r(args.data_dir + '/' + 'UMAP_CHNSPentropy.Rdata')
         UMAP_CHNSPentropy = aux['pred']
         aux = readR.read_r(args.data_dir + '/' + 'tSNE_CHNSPentropy.Rdata')
@@ -868,6 +929,15 @@ def plot_stat_complete(classes, args):
             # plt.legend(handles=legend_elements, ncol=2)
         plt.plot(sorted(age), UMAP_fit_CHNSPselfCENTROID, 'k', lw=0.5)
         plt.savefig(args.data_dir + '/' + 'MEAN_points_dist_CHNSP_self_UMAP.pdf')
+
+        fig, ax = plt.subplots()
+        for i in range(0, len(babies)):
+            plt.plot(age[i], centroid_CHNSP_self_UMAPavg[i], color=colors[i], marker='*')
+            ax.set_xlabel('Age (in days)', fontsize=15)
+            ax.set_ylabel('Mean distance from the centroid', fontsize=15)
+            # plt.legend(handles=legend_elements, ncol=2)
+        plt.plot(sorted(age), UMAP_fit_CHNSPselfCENTROIDavg, 'k', lw=0.5)
+        plt.savefig(args.data_dir + '/' + 'MEAN_points_dist_CHNSP_self_UMAPavg.pdf')
 
         fig, ax = plt.subplots()
         for i in range(0, len(babies)):
@@ -938,6 +1008,18 @@ def plot_stat_complete(classes, args):
         plt.savefig(args.data_dir + '/' + 'dist_CHNSP_FAN_UMAP.pdf')
 
         plt.close('all')
+
+        aux = readR.read_r(args.data_dir + '/' + 'UMAP_CHNSP_FAN_centroidAVG.Rdata')
+        UMAP_fit_CHNSP_FAN_CENTROIDavg = aux['pred']
+
+        fig, ax = plt.subplots()
+        for i in range(0, len(babies)):
+            plt.plot(age[i], dist_CHNSP_FAN_UMAPavg[i], color=colors[i], marker='*')
+            ax.set_xlabel('Age (in days)', fontsize=15)
+            ax.set_ylabel('Distance between centroids', fontsize=15)
+            # plt.legend(handles=legend_elements, ncol=2)
+        plt.plot(sorted(age), UMAP_fit_CHNSP_FAN_CENTROIDavg, 'k', lw=0.5)
+        plt.savefig(args.data_dir + '/' + 'dist_CHNSP_FAN_UMAPavg.pdf')
 
     if pos_MAN != -1 and pos_CHNSP != -1:
         aux = readR.read_r(args.data_dir + '/' + 'UMAP_CHNSP_MAN_centroid.Rdata')
@@ -1294,7 +1376,7 @@ if __name__ == '__main__':
 
     if args.option == 'plot':
         #classes = ['CHNSP', 'FAN', 'MAN']
-        classes = ['CHNNSP', 'CHNSP', 'FAN']
+        classes = ['CHNNSP', 'CHNSP', 'FAN', 'MAN']
         #classes = ['CHNSP', 'FAN']
         #classes = ['CHNNSP', 'CHNSP']
         #classes = ['CHNSP']

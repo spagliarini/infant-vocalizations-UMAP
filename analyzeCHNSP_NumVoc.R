@@ -17,8 +17,10 @@ plot(ourdata$AGE, ourdata$CHNSPentropy,
 CHNSPentropy_UMAP = ourdata$CHNSPentropyUMAP
 CHNSPentropy_tSNE = ourdata$CHNSPentropytSNE
 CHNSPcentroid_self_UMAP = ourdata$CENTROIDdist_CHNSPself_UMAP
+CHNSPcentroid_self_UMAPavg = ourdata$CENTROIDdist_CHNSPself_UMAPavg
 CHNNSPcentroid_self_UMAP = ourdata$CENTROIDdist_CHNNSPself_UMAP
 CHNSP_FAN_centroid_UMAP = ourdata$CENTROID_CHNSP_FAN_UMAP
+CHNSP_FAN_centroid_UMAPavg = ourdata$CENTROID_CHNSP_FAN_UMAPavg
 CHNSP_MAN_centroid_UMAP = ourdata$CENTROID_CHNSP_MAN_UMAP
 CHNNSP_FAN_centroid_UMAP = ourdata$CENTROID_CHNNSP_FAN_UMAP
 CHNNSP_CHNSP_centroid_UMAP = ourdata$CENTROID_CHNNSP_CHNSP_UMAP
@@ -120,6 +122,22 @@ pred = predCentroidself[ix]
 
 lines(ourdata$AGE[ix],predCentroidself[ix])
 
+#avg
+plot(ourdata$AGE, ourdata$CENTROIDdist_CHNSPself_UMAPavg,
+     xlab = "Infant age (days)",
+     ylab = "Distance from the centroid CHNSP")
+
+lmPoly = lmer(CHNSPcentroid_self_UMAPavg ~ poly(AGE,2) + (1|ChildID) + CHILDvocNumber, data = ourdata)
+summary(lmPoly)
+confint(lmPoly)
+
+predCentroidselfAVG = predict(lmPoly)
+ix = sort(ourdata$AGE,index.return=T)$ix
+pred = predCentroidselfAVG[ix]
+
+lines(ourdata$AGE[ix],predCentroidselfAVG[ix])
+
+
 # z
 lmPoly = lmer(z_CHNSPcentroid_self_UMAP ~ poly(AGE,2) + (1|ChildID) + CHILDvocNumber, data = ourdata)
 summary(lmPoly)
@@ -194,6 +212,22 @@ ix = sort(ourdata$AGE,index.return=T)$ix
 pred = predCHNSP_FAN[ix]
 
 lines(ourdata$AGE[ix],predCHNSP_FAN[ix])
+
+#avg
+plot(ourdata$AGE, ourdata$CENTROID_CHNSP_FAN_UMAPavg,
+     xlab = "Infant age (days)",
+     ylab = "Distance between centroids (CHNSP-FAN)")
+
+lmPoly = lm(CHNSP_FAN_centroid_UMAPavg ~ poly(AGE,2), data = ourdata)
+summary(lmPoly)
+confint(lmPoly)
+
+predCHNSP_FANavg = predict(lmPoly)
+ix = sort(ourdata$AGE,index.return=T)$ix
+pred = predCHNSP_FANavg[ix]
+
+lines(ourdata$AGE[ix],predCHNSP_FANavg[ix])
+save(pred, file="UMAP_CHNSP_FAN_centroidAVG.Rdata")
 
 # z
 lmPoly = lmer(z_CHNSP_FAN_centroid_UMAP ~ poly(AGE,2) + (1|ChildID) + CHILDvocNumber, data = ourdata)
