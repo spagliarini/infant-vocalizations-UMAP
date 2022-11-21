@@ -30,6 +30,6 @@ References:
 
 3. The two R files contain the functions to fit the data. The output can be then loaded into plot_stat_complete to obtain figures and correlation measure.
 
-4. Validation and modal value. 
-* Modal_value.py allows to group all the listeners new labels, compute the modal value for each vocalization analyzed by the listeners, and define an "average label".
-* Then all the pre-processing + analysis runs as described above.
+4. Validation and modal value
+In the Cohen_kappa.py code one can compute the modal_value, which allows to group all the listeners new labels and define an "average label".
+Then, one can run all the pre-processing + analysis as described above.
